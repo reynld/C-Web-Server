@@ -189,7 +189,19 @@ void handle_http_request(int fd, struct cache *cache)
         if (strcmp("/d20", path) == 0) {
             get_d20(fd);
         } else {
-            resp_404(fd);
+            char *mime_type;
+            char filepath[4096];
+
+            snprintf(filepath, sizeof filepath, "%s%s", SERVER_ROOT, path);
+            struct file_data *filedata = file_load(filepath);
+
+            if (filedata != NULL){
+                mime_type = mime_type_get(filepath);
+                send_response(fd, "HTTP/1.1 200 SUCCESS", mime_type, filedata->data, filedata->size);
+            } else {
+                resp_404(fd);
+            }
+
         }
     }
 
