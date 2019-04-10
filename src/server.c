@@ -70,6 +70,8 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
         body    
     );
 
+    printf("Header: %s\n", header);
+
     // Send it all!
     int rv = send(fd, response, response_length, 0);
 
@@ -87,16 +89,19 @@ int send_response(int fd, char *header, char *content_type, void *body, int cont
 void get_d20(int fd)
 {
     // Generate a random number between 1 and 20 inclusive
-    
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    srand(time(0));
+    int n = rand() % 20 + 1;
+    char buf[5];
+    sprintf(buf, "%i", n);
 
     // Use send_response() to send it back as text/plain data
-
     ///////////////////
     // IMPLEMENT ME! //
     ///////////////////
+    send_response(fd, "HTTP/1.1 200 SUCCESS", "text/plain", buf, strlen(buf));
 }
 
 /**
@@ -176,6 +181,18 @@ void handle_http_request(int fd, struct cache *cache)
     //    Check if it's /d20 and handle that special case
     //    Otherwise serve the requested file by calling get_file()
 
+    char method[256], path[4096];
+
+    sscanf(request, "%s %s", method, path);
+
+    if (strcmp("GET", method) == 0) {
+        if (strcmp("/d20", path) == 0) {
+            get_d20(fd);
+        } else {
+            resp_404(fd);
+        }
+    }
+
 
     // (Stretch) If POST, handle the post request
 }
@@ -198,6 +215,14 @@ int main(void)
         fprintf(stderr, "webserver: fatal error getting listening socket\n");
         exit(1);
     }
+
+    // resp_404(listenfd);
+    // srand(time(0));
+    // int n = rand() % 20 + 1;
+    // char buf[5];
+    // sprintf(buf, "%i", n);
+    // printf("num: %i\n", n);
+    // printf("buf: %s\n", buf);
 
     printf("webserver: waiting for connections on port %s...\n", PORT);
 
